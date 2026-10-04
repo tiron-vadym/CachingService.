@@ -1,0 +1,48 @@
+services:
+  caching-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: caching-service
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=sqlite+aiosqlite:////data/cache_service.db
+      - ENVIRONMENT=production
+      - TRANSFORMER_DELAY_SECONDS=0.05
+    volumes:
+      - sqlite_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+  # Optional PostgreSQL configuration
+  # Uncomment the postgres service and update DATABASE_URL above to:
+  # DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/caching_service
+  #
+  # postgres:
+  #   image: postgres:16-alpine
+  #   container_name: postgres-db
+  #   environment:
+  #     - POSTGRES_USER=postgres
+  #     - POSTGRES_PASSWORD=postgres
+  #     - POSTGRES_DB=caching_service
+  #   volumes:
+  #     - pgdata:/var/lib/postgresql/data
+  #   ports:
+  #     - "5432:5432"
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U postgres"]
+  #     interval: 5s
+  #     timeout: 5s
+  #     retries: 5
+
+volumes:
+  sqlite_data:
+    driver: local
+  # pgdata:
+  #   driver: local
